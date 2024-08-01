@@ -1,100 +1,86 @@
-// Simulated database for users and requests
-const users = {
-    'donor1': { username: 'donor1', password: 'password1' },
-    'donor2': { username: 'donor2', password: 'password2' }
+// User data storage
+const users = [
+  { username: "donor1", password: "password1" },
+  { username: "donor2", password: "password2" },
+  { username: "donor3", password: "password3" },
+  { username: "donor4", password: "password4" },
+];
+
+// Show Login Popup
+window.showLoginPopup = function () {
+  document.getElementById("login-popup").style.display = "flex";
 };
 
-const requests = [];
+// Show Register Popup
+window.showRegisterPopup = function () {
+  document.getElementById("login-popup").style.display = "none";
+  document.getElementById("register-popup").style.display = "flex";
+};
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('login-form').addEventListener('submit', loginUser);
-    document.getElementById('register-form').addEventListener('submit', registerUser);
-    document.getElementById('request-form').addEventListener('submit', submitRequest);
+// Show Request Popup
+window.showRequestPopup = function () {
+  document.getElementById("request-popup").style.display = "flex";
+};
+
+// Close Popup
+window.closePopup = function (popupId) {
+  document.getElementById(popupId).style.display = "none";
+};
+
+// Login Form Submission
+document.getElementById("login-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const username = document.getElementById("login-username").value;
+  const password = document.getElementById("login-password").value;
+
+  // Check if user exists
+  const user = users.find(
+    (user) => user.username === username && user.password === password
+  );
+  if (user) {
+    sessionStorage.setItem("username", username);
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Invalid username or password.");
+  }
 });
 
-function showLoginPopup() {
-    document.getElementById('login-popup').style.display = 'flex';
-}
+// Register Form Submission
+document
+  .getElementById("register-form")
+  .addEventListener("submit", function (e) {
+    e.preventDefault();
+    const username = document.getElementById("register-username").value;
+    const password = document.getElementById("register-password").value;
 
-function showRegisterPopup() {
-    document.getElementById('register-popup').style.display = 'flex';
-}
-
-function showRequestPopup() {
-    document.getElementById('request-popup').style.display = 'flex';
-}
-
-function closePopup(popupId) {
-    document.getElementById(popupId).style.display = 'none';
-}
-
-function loginUser(event) {
-    event.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    if (users[username] && users[username].password === password) {
-        alert('Login successful!');
-        document.getElementById('login-popup').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('user-name').innerText = username;
-        updateRequestsCount();
-        loadPendingRequests();
+    // Check if username already exists
+    const existingUser = users.find((user) => user.username === username);
+    if (existingUser) {
+      alert("Username already exists. Please choose a different one.");
     } else {
-        alert('Invalid username or password!');
+      // Add new user
+      users.push({ username, password });
+      alert("Registration successful. Please login.");
+      closePopup("register-popup");
     }
-}
+  });
 
-function registerUser(event) {
-    event.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
+// Request Form Submission
+document
+  .getElementById("request-form")
+  .addEventListener("submit", function (e) {
+    e.preventDefault();
+    const location = document.getElementById("request-location").value;
 
-    if (users[username]) {
-        alert('Username already exists!');
-    } else {
-        users[username] = { username, password };
-        alert('Registration successful!');
-        document.getElementById('register-popup').style.display = 'none';
-    }
-}
+    // Submit the request (Here just close the popup)
+    alert("Request submitted successfully.");
+    closePopup("request-popup");
+  });
 
-function submitRequest(event) {
-    event.preventDefault();
-    const location = document.getElementById('request-location').value;
-    requests.push({ location });
-    alert('Request submitted successfully!');
-    document.getElementById('request-popup').style.display = 'none';
-    updateRequestsCount();
-}
-
-function updateRequestsCount() {
-    document.getElementById('requests-count').innerText = `Total Requests: ${requests.length}`;
-}
-
-function loadPendingRequests() {
-    const pendingRequestsDiv = document.getElementById('pending-requests');
-    pendingRequestsDiv.innerHTML = '';
-    requests.forEach((request, index) => {
-        const requestDiv = document.createElement('div');
-        requestDiv.innerHTML = `Request ${index + 1}: ${request.location}`;
-        pendingRequestsDiv.appendChild(requestDiv);
-    });
-}
-
-function showSection(sectionId) {
-    document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
-}
-
-function logout() {
-    document.getElementById('dashboard').style.display = 'none';
-    alert('Logged out successfully!');
-}
-
-function cancelForm() {
-    document.getElementById('donation-form').reset();
-    showSection('dashboard-home');
-}
+// Fetch and display request count
+fetch("requests.json")
+  .then((response) => response.json())
+  .then((data) => {
+    const requestCountElement = document.getElementById("requests-count");
+    requestCountElement.textContent = `Pending Requests: ${data.requests.length}`;
+  });
